@@ -6,7 +6,7 @@ import { AuthUser, User } from '@/types';
 interface AuthContextType {
   currentUser: AuthUser | null;
   users: User[];
-  login: (type: 'admin' | 'user', credentials?: { cpf: string; password: string }) => Promise<boolean>;
+  login: (type: 'admin' | 'user', credentials?: { cpf?: string; password: string }) => Promise<boolean>;
   logout: () => void;
   addUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
@@ -15,6 +15,9 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Senha administrativa definida
+const ADMIN_PASSWORD = "8470";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -38,14 +41,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('credconecta-users', JSON.stringify(users));
   }, [users]);
 
-  const login = async (type: 'admin' | 'user', credentials?: { cpf: string; password: string }): Promise<boolean> => {
+  const login = async (type: 'admin' | 'user', credentials?: { cpf?: string; password: string }): Promise<boolean> => {
     if (type === 'admin') {
-      // Login do administrador (senha fixa para demo)
-      const adminAuth: AuthUser = { type: 'admin', fullName: 'Administrador' };
-      setCurrentUser(adminAuth);
-      localStorage.setItem('credconecta-auth', JSON.stringify(adminAuth));
-      return true;
-    } else if (credentials) {
+      // Login do administrador com senha
+      if (credentials?.password === ADMIN_PASSWORD) {
+        const adminAuth: AuthUser = { type: 'admin', fullName: 'Administrador' };
+        setCurrentUser(adminAuth);
+        localStorage.setItem('credconecta-auth', JSON.stringify(adminAuth));
+        return true;
+      }
+      return false;
+    } else if (credentials && credentials.cpf) {
       // Login do usuário
       const user = users.find(u => u.cpf === credentials.cpf && u.password === credentials.password);
       if (user && !user.isBlocked) {

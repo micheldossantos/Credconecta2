@@ -13,19 +13,29 @@ import { CredconectaLogo } from './CredconectaLogo';
 
 export function LoginPage() {
   const [showUserLogin, setShowUserLogin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [cpf, setCpf] = useState('');
-  const [password, setPassword] = useState('');
+  const [userPassword, setUserPassword] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleAdminLogin = async () => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminPassword) {
+      toast.error('Digite a senha administrativa');
+      return;
+    }
+
     setLoading(true);
     try {
-      const success = await login('admin');
+      const success = await login('admin', { password: adminPassword });
       if (success) {
-        toast.success('Login realizado com sucesso!');
+        toast.success('Login administrativo realizado com sucesso!');
+        setShowAdminLogin(false);
+        setAdminPassword('');
       } else {
-        toast.error('Erro ao fazer login');
+        toast.error('Senha administrativa incorreta');
       }
     } catch (error) {
       toast.error('Erro ao fazer login');
@@ -36,17 +46,19 @@ export function LoginPage() {
 
   const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cpf || !password) {
+    if (!cpf || !userPassword) {
       toast.error('Preencha todos os campos');
       return;
     }
 
     setLoading(true);
     try {
-      const success = await login('user', { cpf, password });
+      const success = await login('user', { cpf, password: userPassword });
       if (success) {
         toast.success('Login realizado com sucesso!');
         setShowUserLogin(false);
+        setCpf('');
+        setUserPassword('');
       } else {
         toast.error('CPF ou senha incorretos, ou usuário bloqueado');
       }
@@ -81,7 +93,7 @@ export function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              onClick={handleAdminLogin}
+              onClick={() => setShowAdminLogin(true)}
               disabled={loading}
               className="w-full h-12 text-lg"
               variant="default"
@@ -102,6 +114,50 @@ export function LoginPage() {
           </CardContent>
         </Card>
 
+        {/* Dialog de Login Administrativo */}
+        <Dialog open={showAdminLogin} onOpenChange={setShowAdminLogin}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Login Administrativo</DialogTitle>
+              <DialogDescription>
+                Digite a senha administrativa para acessar o painel
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="adminPassword">Senha Administrativa</Label>
+                <Input
+                  id="adminPassword"
+                  type="password"
+                  placeholder="Digite a senha administrativa"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Button type="submit" disabled={loading} className="flex-1">
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowAdminLogin(false);
+                    setAdminPassword('');
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Login de Usuário */}
         <Dialog open={showUserLogin} onOpenChange={setShowUserLogin}>
           <DialogContent>
             <DialogHeader>
@@ -126,13 +182,13 @@ export function LoginPage() {
               </div>
               
               <div>
-                <Label htmlFor="password">Senha (4 dígitos)</Label>
+                <Label htmlFor="userPassword">Senha (4 dígitos)</Label>
                 <Input
-                  id="password"
+                  id="userPassword"
                   type="password"
                   placeholder="0000"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  value={userPassword}
+                  onChange={(e) => setUserPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   maxLength={4}
                   required
                 />
@@ -145,7 +201,11 @@ export function LoginPage() {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setShowUserLogin(false)}
+                  onClick={() => {
+                    setShowUserLogin(false);
+                    setCpf('');
+                    setUserPassword('');
+                  }}
                   className="flex-1"
                 >
                   Cancelar
