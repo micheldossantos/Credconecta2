@@ -9,6 +9,7 @@ import { useLoans } from '@/contexts/LoanContext';
 import { UserManagement } from './UserManagement';
 import { LoanManagement } from './LoanManagement';
 import { ReportsPage } from './ReportsPage';
+import { StockTicker } from './StockTicker';
 import { 
   Users, 
   CreditCard, 
@@ -145,7 +146,7 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -163,7 +164,7 @@ export function AdminDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <nav className="flex space-x-4 mb-6">
           <Button
             variant={activeTab === 'overview' ? 'default' : 'outline'}
@@ -211,6 +212,13 @@ export function AdminDashboard() {
 
         {renderContent()}
       </div>
+
+      {/* Painel da Bolsa de Valores no Rodapé */}
+      <footer className="bg-white border-t mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <StockTicker />
+        </div>
+      </footer>
     </div>
   );
 }
