@@ -25,7 +25,6 @@ type ActiveTab = 'overview' | 'users' | 'loans' | 'reports';
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
-  const [imageError, setImageError] = useState(false);
   const { logout, users } = useAuth();
   const { loans, getOverdueLoans, getLoanReport } = useLoans();
 
@@ -151,28 +150,13 @@ export function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-3">
-              {!imageError ? (
-                <Image
-                  src="/credconecta-logo.png"
-                  alt="Credconecta Logo"
-                  width={180}
-                  height={60}
-                  className="max-w-full h-auto"
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <CreditCard className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-lg font-bold">
-                      <span className="text-black">Cred</span>
-                      <span className="text-red-600">conecta</span>
-                    </h1>
-                  </div>
-                </div>
-              )}
+              <Image
+                src="/credconecta-logo.png"
+                alt="Credconecta Logo"
+                width={180}
+                height={60}
+                className="max-w-full h-auto"
+              />
               <div className="ml-2">
                 <p className="text-sm text-gray-600">Painel Administrativo</p>
               </div>

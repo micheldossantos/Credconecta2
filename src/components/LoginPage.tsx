@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Shield, User, CreditCard } from 'lucide-react';
+import { Shield, User } from 'lucide-react';
 import Image from 'next/image';
 
 export function LoginPage() {
@@ -16,7 +16,6 @@ export function LoginPage() {
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const { login } = useAuth();
 
   const handleAdminLogin = async () => {
@@ -68,31 +67,14 @@ export function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            {!imageError ? (
-              <Image
-                src="/credconecta-logo.png"
-                alt="Credconecta Logo"
-                width={300}
-                height={120}
-                className="max-w-full h-auto"
-                priority
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                    <CreditCard className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    <span className="text-black">Cred</span>
-                    <span className="text-red-600">conecta</span>
-                  </h1>
-                </div>
-              </div>
-            )}
+            <Image
+              src="/credconecta-logo.png"
+              alt="Credconecta Logo"
+              width={300}
+              height={120}
+              className="max-w-full h-auto"
+              priority
+            />
           </div>
           <p className="text-gray-600 mt-2">Sistema de Gestão de Empréstimos</p>
         </div>
