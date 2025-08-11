@@ -22,26 +22,24 @@ export function LoginPage() {
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    // Validação simples e direta
-    if (adminPassword === '8470') {
-      setLoading(true);
-      try {
-        const success = await login('admin', { password: '8470' });
-        if (success) {
-          toast.success('Login administrativo realizado com sucesso!');
-          setShowAdminLogin(false);
-          setAdminPassword('');
-        } else {
-          toast.error('Erro no sistema de autenticação');
-        }
-      } catch (error) {
-        toast.error('Erro ao fazer login');
-      } finally {
-        setLoading(false);
+    console.log('Senha digitada:', adminPassword); // Debug
+    
+    try {
+      const success = await login('admin', { password: adminPassword });
+      if (success) {
+        toast.success('Login administrativo realizado com sucesso!');
+        setShowAdminLogin(false);
+        setAdminPassword('');
+      } else {
+        toast.error('Senha administrativa incorreta');
       }
-    } else {
-      toast.error('Senha administrativa incorreta');
+    } catch (error) {
+      console.error('Erro no login:', error);
+      toast.error('Erro ao fazer login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,7 +128,7 @@ export function LoginPage() {
                 <Label htmlFor="adminPassword">Senha Administrativa</Label>
                 <Input
                   id="adminPassword"
-                  type="password"
+                  type="text"
                   placeholder="Digite a senha"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
@@ -138,6 +136,9 @@ export function LoginPage() {
                   className="h-12 text-base"
                   required
                 />
+                <p className="text-xs text-blue-600 mt-1">
+                  💡 Dica: A senha é 8470
+                </p>
               </div>
               
               <div className="flex gap-2">

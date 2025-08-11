@@ -42,14 +42,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [users]);
 
   const login = async (type: 'admin' | 'user', credentials?: { cpf?: string; password: string }): Promise<boolean> => {
+    console.log('Tentativa de login:', { type, password: credentials?.password }); // Debug
+    
     if (type === 'admin') {
-      // Login do administrador - validação simples
+      // Login do administrador - validação direta e simples
       if (credentials?.password === '8470') {
         const adminAuth: AuthUser = { type: 'admin', fullName: 'Administrador' };
         setCurrentUser(adminAuth);
         localStorage.setItem('credconecta-auth', JSON.stringify(adminAuth));
+        console.log('Login admin bem-sucedido'); // Debug
         return true;
       }
+      console.log('Senha admin incorreta:', credentials?.password); // Debug
       return false;
     } else if (credentials && credentials.cpf) {
       // Login do usuário
