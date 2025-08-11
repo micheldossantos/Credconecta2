@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Shield, User } from 'lucide-react';
-import Image from 'next/image';
+import { CredconectaLogo } from './CredconectaLogo';
 
 export function LoginPage() {
   const [showUserLogin, setShowUserLogin] = useState(false);
@@ -67,14 +67,7 @@ export function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <Image
-              src="/credconecta-logo.png"
-              alt="Credconecta Logo"
-              width={300}
-              height={120}
-              className="max-w-full h-auto"
-              priority
-            />
+            <CredconectaLogo width={300} height={120} />
           </div>
           <p className="text-gray-600 mt-2">Sistema de Gestão de Empréstimos</p>
         </div>
