@@ -6,9 +6,14 @@ import { LoginPage } from '@/components/LoginPage';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { UserDashboard } from '@/components/UserDashboard';
 import { Toaster } from '@/components/ui/sonner';
+import Loading from './loading';
 
 function AppContent() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
+
+  if (loading) {
+    return <Loading />;
+  }
 
   if (!currentUser) {
     return <LoginPage />;
