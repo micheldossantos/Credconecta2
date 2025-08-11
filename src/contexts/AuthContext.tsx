@@ -27,7 +27,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const savedUsers = localStorage.getItem('credconecta-users');
     if (savedUsers) {
-      setUsers(JSON.parse(savedUsers));
+      setUsers(JSON.parse(savedUsers).map((user: any) => ({
+        ...user,
+        createdAt: new Date(user.createdAt),
+      })));
     }
 
     const savedAuth = localStorage.getItem('credconecta-auth');
@@ -42,14 +45,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [users]);
 
   const login = async (type: 'admin' | 'user', credentials?: { cpf?: string; password: string }): Promise<boolean> => {
+    console.log('Login attempt:', { type, credentials });
+    
     if (type === 'admin') {
       // Login do administrador com senha
-      if (credentials?.password === ADMIN_PASSWORD) {
+      console.log('Admin login - Password provided:', credentials?.password);
+      console.log('Admin login - Expected password:', ADMIN_PASSWORD);
+      console.log('Admin login - Passwords match:', credentials?.password === ADMIN_PASSWORD);
+      
+      if (credentials?.password && credentials.password.trim() === ADMIN_PASSWORD) {
         const adminAuth: AuthUser = { type: 'admin', fullName: 'Administrador' };
         setCurrentUser(adminAuth);
         localStorage.setItem('credconecta-auth', JSON.stringify(adminAuth));
+        console.log('Admin login successful');
         return true;
       }
+      console.log('Admin login failed');
       return false;
     } else if (credentials && credentials.cpf) {
       // Login do usuário

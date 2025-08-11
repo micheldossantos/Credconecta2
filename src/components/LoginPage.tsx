@@ -22,22 +22,27 @@ export function LoginPage() {
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!adminPassword) {
+    
+    console.log('Admin form submitted with password:', adminPassword);
+    
+    if (!adminPassword || adminPassword.trim() === '') {
       toast.error('Digite a senha administrativa');
       return;
     }
 
     setLoading(true);
     try {
-      const success = await login('admin', { password: adminPassword });
+      const success = await login('admin', { password: adminPassword.trim() });
       if (success) {
         toast.success('Login administrativo realizado com sucesso!');
         setShowAdminLogin(false);
         setAdminPassword('');
       } else {
         toast.error('Senha administrativa incorreta');
+        console.log('Login failed for password:', adminPassword);
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast.error('Erro ao fazer login');
     } finally {
       setLoading(false);
@@ -132,9 +137,17 @@ export function LoginPage() {
                   type="password"
                   placeholder="Digite a senha administrativa"
                   value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    console.log('Admin password input changed:', value);
+                    setAdminPassword(value);
+                  }}
+                  autoComplete="off"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Senha atual para teste: 8470
+                </p>
               </div>
               
               <div className="flex gap-2">
