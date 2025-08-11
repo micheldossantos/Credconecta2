@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { LoanProvider } from '@/contexts/LoanContext';
 import { LoginPage } from '@/components/LoginPage';
 import { AdminDashboard } from '@/components/AdminDashboard';
+import { UserDashboard } from '@/components/UserDashboard';
 import { Toaster } from '@/components/ui/sonner';
 
 function AppContent() {
@@ -17,15 +18,8 @@ function AppContent() {
     return <AdminDashboard />;
   }
 
-  // Para usuários comuns (implementação futura)
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Bem-vindo, {currentUser.fullName}!</h1>
-        <p className="text-gray-600">Painel do usuário em desenvolvimento...</p>
-      </div>
-    </div>
-  );
+  // Para usuários comuns
+  return <UserDashboard />;
 }
 
 export default function Home() {
