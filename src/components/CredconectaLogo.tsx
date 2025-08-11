@@ -19,17 +19,7 @@ export function CredconectaLogo({ width = 300, height = 120, className = "" }: C
         xmlns="http://www.w3.org/2000/svg"
         className="max-w-full h-auto"
       >
-        {/* Círculo azul de fundo */}
-        <circle
-          cx="60"
-          cy="60"
-          r="45"
-          fill="#2563eb"
-          stroke="#1d4ed8"
-          strokeWidth="2"
-        />
-        
-        {/* Símbolo do dólar vermelho */}
+        {/* Símbolo do dólar vermelho sem fundo */}
         <text
           x="60"
           y="75"

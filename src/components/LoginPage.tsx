@@ -24,8 +24,6 @@ export function LoginPage() {
     e.preventDefault();
     setLoading(true);
     
-    console.log('Senha digitada:', adminPassword); // Debug
-    
     try {
       const success = await login('admin', { password: adminPassword });
       if (success) {
@@ -36,7 +34,6 @@ export function LoginPage() {
         toast.error('Senha administrativa incorreta');
       }
     } catch (error) {
-      console.error('Erro no login:', error);
       toast.error('Erro ao fazer login');
     } finally {
       setLoading(false);
@@ -128,7 +125,7 @@ export function LoginPage() {
                 <Label htmlFor="adminPassword">Senha Administrativa</Label>
                 <Input
                   id="adminPassword"
-                  type="text"
+                  type="password"
                   placeholder="Digite a senha"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
@@ -136,9 +133,6 @@ export function LoginPage() {
                   className="h-12 text-base"
                   required
                 />
-                <p className="text-xs text-blue-600 mt-1">
-                  💡 Dica: A senha é 8470
-                </p>
               </div>
               
               <div className="flex gap-2">
