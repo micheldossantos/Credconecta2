@@ -16,9 +16,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Senha administrativa definida
-const ADMIN_PASSWORD = "8470";
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -45,22 +42,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [users]);
 
   const login = async (type: 'admin' | 'user', credentials?: { cpf?: string; password: string }): Promise<boolean> => {
-    console.log('Login attempt:', { type, credentials });
-    
     if (type === 'admin') {
-      // Login do administrador com senha
-      console.log('Admin login - Password provided:', credentials?.password);
-      console.log('Admin login - Expected password:', ADMIN_PASSWORD);
-      console.log('Admin login - Passwords match:', credentials?.password === ADMIN_PASSWORD);
-      
-      if (credentials?.password && credentials.password.trim() === ADMIN_PASSWORD) {
+      // Login do administrador - validação simples
+      if (credentials?.password === '8470') {
         const adminAuth: AuthUser = { type: 'admin', fullName: 'Administrador' };
         setCurrentUser(adminAuth);
         localStorage.setItem('credconecta-auth', JSON.stringify(adminAuth));
-        console.log('Admin login successful');
         return true;
       }
-      console.log('Admin login failed');
       return false;
     } else if (credentials && credentials.cpf) {
       // Login do usuário

@@ -23,29 +23,25 @@ export function LoginPage() {
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Admin form submitted with password:', adminPassword);
-    
-    if (!adminPassword || adminPassword.trim() === '') {
-      toast.error('Digite a senha administrativa');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const success = await login('admin', { password: adminPassword.trim() });
-      if (success) {
-        toast.success('Login administrativo realizado com sucesso!');
-        setShowAdminLogin(false);
-        setAdminPassword('');
-      } else {
-        toast.error('Senha administrativa incorreta');
-        console.log('Login failed for password:', adminPassword);
+    // Validação simples e direta
+    if (adminPassword === '8470') {
+      setLoading(true);
+      try {
+        const success = await login('admin', { password: '8470' });
+        if (success) {
+          toast.success('Login administrativo realizado com sucesso!');
+          setShowAdminLogin(false);
+          setAdminPassword('');
+        } else {
+          toast.error('Erro no sistema de autenticação');
+        }
+      } catch (error) {
+        toast.error('Erro ao fazer login');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Erro ao fazer login');
-    } finally {
-      setLoading(false);
+    } else {
+      toast.error('Senha administrativa incorreta. Use: 8470');
     }
   };
 
@@ -125,7 +121,7 @@ export function LoginPage() {
             <DialogHeader>
               <DialogTitle>Login Administrativo</DialogTitle>
               <DialogDescription>
-                Digite a senha administrativa para acessar o painel
+                Digite a senha administrativa: 8470
               </DialogDescription>
             </DialogHeader>
             
@@ -134,19 +130,15 @@ export function LoginPage() {
                 <Label htmlFor="adminPassword">Senha Administrativa</Label>
                 <Input
                   id="adminPassword"
-                  type="password"
-                  placeholder="Digite a senha administrativa"
+                  type="text"
+                  placeholder="8470"
                   value={adminPassword}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    console.log('Admin password input changed:', value);
-                    setAdminPassword(value);
-                  }}
+                  onChange={(e) => setAdminPassword(e.target.value)}
                   autoComplete="off"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Senha atual para teste: 8470
+                <p className="text-xs text-blue-600 mt-1 font-medium">
+                  Senha: 8470
                 </p>
               </div>
               
