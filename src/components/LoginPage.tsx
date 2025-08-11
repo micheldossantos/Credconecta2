@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { CreditCard, Shield, User } from 'lucide-react';
+import { Shield, User } from 'lucide-react';
+import Image from 'next/image';
 
 export function LoginPage() {
   const [showUserLogin, setShowUserLogin] = useState(false);
@@ -65,10 +66,16 @@ export function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <CreditCard className="h-12 w-12 text-blue-600" />
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/credconecta-logo.png"
+              alt="Credconecta Logo"
+              width={300}
+              height={120}
+              className="max-w-full h-auto"
+              priority
+            />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Credconecta</h1>
           <p className="text-gray-600 mt-2">Sistema de Gestão de Empréstimos</p>
         </div>
 
