@@ -1,14 +1,40 @@
-import { MadeWithLasy } from "@/components/made-with-lasy";
+"use client";
+
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { LoanProvider } from '@/contexts/LoanContext';
+import { LoginPage } from '@/components/LoginPage';
+import { AdminDashboard } from '@/components/AdminDashboard';
+import { Toaster } from '@/components/ui/sonner';
+
+function AppContent() {
+  const { currentUser } = useAuth();
+
+  if (!currentUser) {
+    return <LoginPage />;
+  }
+
+  if (currentUser.type === 'admin') {
+    return <AdminDashboard />;
+  }
+
+  // Para usuários comuns (implementação futura)
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Bem-vindo, {currentUser.fullName}!</h1>
+        <p className="text-gray-600">Painel do usuário em desenvolvimento...</p>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex items-center justify-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-1 items-center sm:items-start">
-        <h1 className="text-4xl font-bold mb-4">Bem Vindo ao Seu Novo App</h1>
-        <p className="text-xl text-gray-600">
-          Hora de transformar ideias em realidade!
-        </p>
-      </main>
-      </div>
+    <AuthProvider>
+      <LoanProvider>
+        <AppContent />
+        <Toaster />
+      </LoanProvider>
+    </AuthProvider>
   );
 }
