@@ -77,47 +77,47 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
+      <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <CredconectaLogo width={300} height={120} />
+          <div className="flex justify-center mb-4">
+            <CredconectaLogo width={240} height={80} />
           </div>
-          <p className="text-gray-600 mt-2">Sistema de Gestão de Empréstimos</p>
+          <p className="text-gray-600 text-sm">Sistema de Gestão de Empréstimos</p>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Acesso ao Sistema</CardTitle>
-            <CardDescription>
-              Escolha o tipo de acesso para continuar
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Acesso ao Sistema</CardTitle>
+            <CardDescription className="text-sm">
+              Escolha o tipo de acesso
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <Button 
               onClick={() => setShowAdminLogin(true)}
               disabled={loading}
-              className="w-full h-12 text-lg"
+              className="w-full h-12 text-base"
               variant="default"
             >
               <Shield className="mr-2 h-5 w-5" />
-              Entrar como Administrador
+              Administrador
             </Button>
             
             <Button 
               onClick={() => setShowUserLogin(true)}
               disabled={loading}
-              className="w-full h-12 text-lg"
+              className="w-full h-12 text-base"
               variant="outline"
             >
               <User className="mr-2 h-5 w-5" />
-              Entrar como Usuário
+              Usuário
             </Button>
           </CardContent>
         </Card>
 
         {/* Dialog de Login Administrativo */}
         <Dialog open={showAdminLogin} onOpenChange={setShowAdminLogin}>
-          <DialogContent>
+          <DialogContent className="w-[90vw] max-w-sm">
             <DialogHeader>
               <DialogTitle>Login Administrativo</DialogTitle>
               <DialogDescription>
@@ -135,6 +135,7 @@ export function LoginPage() {
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
                   autoComplete="off"
+                  className="h-12 text-base"
                   required
                 />
                 <p className="text-xs text-blue-600 mt-1 font-medium">
@@ -143,7 +144,7 @@ export function LoginPage() {
               </div>
               
               <div className="flex gap-2">
-                <Button type="submit" disabled={loading} className="flex-1">
+                <Button type="submit" disabled={loading} className="flex-1 h-12">
                   {loading ? 'Entrando...' : 'Entrar'}
                 </Button>
                 <Button 
@@ -153,7 +154,7 @@ export function LoginPage() {
                     setShowAdminLogin(false);
                     setAdminPassword('');
                   }}
-                  className="flex-1"
+                  className="flex-1 h-12"
                 >
                   Cancelar
                 </Button>
@@ -164,11 +165,11 @@ export function LoginPage() {
 
         {/* Dialog de Login de Usuário */}
         <Dialog open={showUserLogin} onOpenChange={setShowUserLogin}>
-          <DialogContent>
+          <DialogContent className="w-[90vw] max-w-sm">
             <DialogHeader>
               <DialogTitle>Login de Usuário</DialogTitle>
               <DialogDescription>
-                Digite suas credenciais para acessar o sistema
+                Digite suas credenciais
               </DialogDescription>
             </DialogHeader>
             
@@ -182,6 +183,7 @@ export function LoginPage() {
                   value={cpf}
                   onChange={(e) => setCpf(formatCPF(e.target.value))}
                   maxLength={14}
+                  className="h-12 text-base"
                   required
                 />
               </div>
@@ -195,12 +197,13 @@ export function LoginPage() {
                   value={userPassword}
                   onChange={(e) => setUserPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   maxLength={4}
+                  className="h-12 text-base"
                   required
                 />
               </div>
               
               <div className="flex gap-2">
-                <Button type="submit" disabled={loading} className="flex-1">
+                <Button type="submit" disabled={loading} className="flex-1 h-12">
                   {loading ? 'Entrando...' : 'Entrar'}
                 </Button>
                 <Button 
@@ -211,7 +214,7 @@ export function LoginPage() {
                     setCpf('');
                     setUserPassword('');
                   }}
-                  className="flex-1"
+                  className="flex-1 h-12"
                 >
                   Cancelar
                 </Button>

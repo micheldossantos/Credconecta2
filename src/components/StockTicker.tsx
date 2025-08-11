@@ -26,9 +26,7 @@ export function StockTicker() {
       { symbol: 'ITUB4', name: 'Itaú' },
       { symbol: 'BBDC4', name: 'Bradesco' },
       { symbol: 'ABEV3', name: 'Ambev' },
-      { symbol: 'MGLU3', name: 'Magazine Luiza' },
-      { symbol: 'WEGE3', name: 'WEG' },
-      { symbol: 'SUZB3', name: 'Suzano' }
+      { symbol: 'MGLU3', name: 'Magazine Luiza' }
     ];
 
     return stockSymbols.map(stock => {
@@ -52,11 +50,7 @@ export function StockTicker() {
       setLoading(true);
       
       // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Em produção, substituir por chamada real da API
-      // const response = await fetch('https://api.hgbrasil.com/finance/stock_price?key=YOUR_KEY&symbol=petr4,vale3,itub4');
-      // const data = await response.json();
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       const mockData = generateMockStockData();
       setStocks(mockData);
@@ -99,42 +93,54 @@ export function StockTicker() {
 
   return (
     <Card className="w-full">
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-gray-700">Bolsa de Valores - B3</h3>
-            {loading && <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />}
+            <h3 className="text-sm font-semibold text-gray-700">📈 Bolsa B3</h3>
+            {loading && <RefreshCw className="h-3 w-3 animate-spin text-blue-600" />}
           </div>
           <div className="text-xs text-gray-500">
-            Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
+            {lastUpdate.toLocaleTimeString('pt-BR', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })}
           </div>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        {/* Layout Mobile - 2 colunas */}
+        <div className="grid grid-cols-2 gap-2">
           {stocks.map((stock) => (
-            <div key={stock.symbol} className="text-center p-2 bg-gray-50 rounded-lg">
-              <div className="text-xs font-medium text-gray-700 mb-1">
-                {stock.symbol}
+            <div key={stock.symbol} className="bg-gray-50 rounded-lg p-2">
+              <div className="flex justify-between items-start mb-1">
+                <div className="text-xs font-medium text-gray-700">
+                  {stock.symbol}
+                </div>
+                <div className={`flex items-center gap-1 ${getChangeColor(stock.change)}`}>
+                  {getChangeIcon(stock.change)}
+                </div>
               </div>
+              
               <div className="text-sm font-bold mb-1">
                 R$ {stock.price.toFixed(2)}
               </div>
-              <div className={`flex items-center justify-center gap-1 text-xs ${getChangeColor(stock.change)}`}>
-                {getChangeIcon(stock.change)}
-                <span>{stock.change > 0 ? '+' : ''}{stock.change.toFixed(2)}</span>
+              
+              <div className="flex items-center justify-between">
+                <span className={`text-xs ${getChangeColor(stock.change)}`}>
+                  {stock.change > 0 ? '+' : ''}{stock.change.toFixed(2)}
+                </span>
+                <Badge 
+                  variant={getBadgeVariant(stock.change)} 
+                  className="text-xs h-5"
+                >
+                  {stock.changePercent > 0 ? '+' : ''}{stock.changePercent.toFixed(1)}%
+                </Badge>
               </div>
-              <Badge 
-                variant={getBadgeVariant(stock.change)} 
-                className="text-xs mt-1"
-              >
-                {stock.changePercent > 0 ? '+' : ''}{stock.changePercent.toFixed(1)}%
-              </Badge>
             </div>
           ))}
         </div>
         
-        <div className="mt-3 text-xs text-gray-500 text-center">
-          💡 Dados simulados para demonstração • Atualização automática a cada 5 segundos
+        <div className="mt-2 text-xs text-gray-500 text-center">
+          🔄 Atualização automática • 5s
         </div>
       </CardContent>
     </Card>
