@@ -5,13 +5,14 @@ import { Loan, LoanReport } from '@/types';
 
 interface LoanContextType {
   loans: Loan[];
-  addLoan: (loan: Omit<Loan, 'id' | 'createdAt' | 'updatedAt' | 'remainingInstallments'>) => void;
+  addLoan: (loan: Omit<Loan, 'id' | 'createdAt' | 'updatedAt' | 'remainingInstallments'>, userId?: string) => void;
   updateLoan: (id: string, updates: Partial<Loan>) => void;
   deleteLoan: (id: string) => void;
   settleLoan: (id: string) => void;
-  getOverdueLoans: () => Loan[];
-  getLoanReport: () => LoanReport;
+  getOverdueLoans: (userId?: string) => Loan[];
+  getLoanReport: (userId?: string) => LoanReport;
   calculatePenalty: (loan: Loan) => number;
+  getUserLoans: (userId: string) => Loan[];
 }
 
 const LoanContext = createContext<LoanContextType | undefined>(undefined);
@@ -28,6 +29,7 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
         loanDate: new Date(loan.loanDate),
         createdAt: new Date(loan.createdAt),
         updatedAt: new Date(loan.updatedAt),
+        createdBy: loan.createdBy || 'admin', // Fallback para empréstimos antigos
       })));
     }
   }, []);
@@ -37,13 +39,14 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('credconecta-loans', JSON.stringify(loans));
   }, [loans]);
 
-  const addLoan = (loanData: Omit<Loan, 'id' | 'createdAt' | 'updatedAt' | 'remainingInstallments'>) => {
+  const addLoan = (loanData: Omit<Loan, 'id' | 'createdAt' | 'updatedAt' | 'remainingInstallments'>, userId = 'admin') => {
     const newLoan: Loan = {
       ...loanData,
       id: Date.now().toString(),
       remainingInstallments: loanData.totalInstallments - loanData.paidInstallments,
       createdAt: new Date(),
       updatedAt: new Date(),
+      createdBy: userId, // Adicionar quem criou o empréstimo
     };
     setLoans(prev => [...prev, newLoan]);
   };
@@ -84,8 +87,13 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
     return daysDiff > 0 ? daysDiff * loan.dailyPenalty : 0;
   };
 
-  const getOverdueLoans = (): Loan[] => {
-    return loans.filter(loan => {
+  const getUserLoans = (userId: string): Loan[] => {
+    return loans.filter(loan => loan.createdBy === userId);
+  };
+
+  const getOverdueLoans = (userId?: string): Loan[] => {
+    const filteredLoans = userId ? getUserLoans(userId) : loans;
+    return filteredLoans.filter(loan => {
       if (loan.isSettled) return false;
       const today = new Date();
       const loanDate = new Date(loan.loanDate);
@@ -93,13 +101,14 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const getLoanReport = (): LoanReport => {
-    const totalLoans = loans.length;
-    const totalAmount = loans.reduce((sum, loan) => sum + loan.loanAmount, 0);
-    const settledLoans = loans.filter(loan => loan.isSettled).length;
-    const pendingLoans = loans.filter(loan => !loan.isSettled).length;
-    const overdueLoans = getOverdueLoans().length;
-    const totalPenalties = loans.reduce((sum, loan) => sum + calculatePenalty(loan), 0);
+  const getLoanReport = (userId?: string): LoanReport => {
+    const filteredLoans = userId ? getUserLoans(userId) : loans;
+    const totalLoans = filteredLoans.length;
+    const totalAmount = filteredLoans.reduce((sum, loan) => sum + loan.loanAmount, 0);
+    const settledLoans = filteredLoans.filter(loan => loan.isSettled).length;
+    const pendingLoans = filteredLoans.filter(loan => !loan.isSettled).length;
+    const overdueLoans = getOverdueLoans(userId).length;
+    const totalPenalties = filteredLoans.reduce((sum, loan) => sum + calculatePenalty(loan), 0);
 
     return {
       totalLoans,
@@ -121,6 +130,7 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
       getOverdueLoans,
       getLoanReport,
       calculatePenalty,
+      getUserLoans,
     }}>
       {children}
     </LoanContext.Provider>

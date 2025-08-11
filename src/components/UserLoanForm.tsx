@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLoans } from '@/contexts/LoanContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,6 +32,7 @@ export function UserLoanForm() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { currentUser } = useAuth();
   const { addLoan } = useLoans();
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<LoanFormData>({
@@ -107,6 +109,11 @@ export function UserLoanForm() {
   };
 
   const onSubmit = (data: LoanFormData) => {
+    if (!currentUser?.id) {
+      toast.error('Erro: usuário não identificado');
+      return;
+    }
+
     const loanData = {
       ...data,
       loanDate: new Date(data.loanDate),
@@ -114,7 +121,8 @@ export function UserLoanForm() {
       isSettled: false,
     };
 
-    addLoan(loanData);
+    // Passar o ID do usuário atual para associar o empréstimo
+    addLoan(loanData, currentUser.id);
     toast.success('Empréstimo cadastrado com sucesso!');
     
     // Reset form
@@ -194,7 +202,7 @@ export function UserLoanForm() {
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="loanDate">Data do Empréstimo</Label>
+                  <Label htmlFor="loanDate">Data  do Empréstimo</Label>
                   <Input
                     id="loanDate"
                     type="date"

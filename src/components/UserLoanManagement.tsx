@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLoans } from '@/contexts/LoanContext';
 import { toast } from 'sonner';
 import { CheckCircle, Edit, FileText, Eye, Phone, Calendar, DollarSign } from 'lucide-react';
@@ -12,7 +13,11 @@ import { Loan } from '@/types';
 
 export function UserLoanManagement() {
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
-  const { loans, settleLoan, calculatePenalty } = useLoans();
+  const { currentUser } = useAuth();
+  const { getUserLoans, settleLoan, calculatePenalty } = useLoans();
+
+  // Obter apenas os empréstimos do usuário atual
+  const userLoans = currentUser?.id ? getUserLoans(currentUser.id) : [];
 
   const handleSettleLoan = (loanId: string, loanName: string) => {
     if (confirm(`Confirma a quitação do empréstimo de ${loanName}?`)) {
@@ -35,6 +40,7 @@ export function UserLoanManagement() {
       multa: calculatePenalty(loan),
       status: loan.isSettled ? 'Quitado' : 'Pendente',
       geradoEm: new Date().toLocaleString('pt-BR'),
+      geradoPor: currentUser?.fullName || 'Usuário',
     };
     
     console.log('=== COMPROVANTE DE EMPRÉSTIMO ===');
@@ -48,6 +54,7 @@ export function UserLoanManagement() {
     console.log(`Restantes: ${receiptData.restantes}`);
     console.log(`Multa: R$ ${receiptData.multa.toFixed(2)}`);
     console.log(`Status: ${receiptData.status}`);
+    console.log(`Gerado por: ${receiptData.geradoPor}`);
     console.log(`Gerado em: ${receiptData.geradoEm}`);
     console.log('================================');
     
@@ -65,22 +72,22 @@ export function UserLoanManagement() {
     <div className="space-y-4 pb-20">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Gerenciar Empréstimos</CardTitle>
+          <CardTitle className="text-lg">Seus Empréstimos</CardTitle>
           <CardDescription>
-            {loans.length} empréstimo(s) cadastrado(s)
+            {userLoans.length} empréstimo(s) cadastrado(s)
           </CardDescription>
         </CardHeader>
       </Card>
 
-      {loans.length === 0 ? (
+      {userLoans.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-gray-500">Nenhum empréstimo cadastrado ainda</p>
+            <p className="text-gray-500">Você ainda não cadastrou nenhum empréstimo</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {loans.map((loan) => {
+          {userLoans.map((loan) => {
             const penalty = calculatePenalty(loan);
             const isOverdue = !loan.isSettled && loan.remainingInstallments > 0 && new Date() > loan.loanDate;
             

@@ -4,19 +4,31 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLoans } from '@/contexts/LoanContext';
 import { FileText, Download, TrendingUp, AlertTriangle, DollarSign, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function UserReports() {
-  const { loans, getLoanReport, getOverdueLoans, calculatePenalty } = useLoans();
+  const { currentUser } = useAuth();
+  const { getUserLoans, getLoanReport, getOverdueLoans, calculatePenalty } = useLoans();
   
-  const report = getLoanReport();
-  const overdueLoans = getOverdueLoans();
+  // Obter dados apenas do usuário atual
+  const userLoans = currentUser?.id ? getUserLoans(currentUser.id) : [];
+  const report = currentUser?.id ? getLoanReport(currentUser.id) : {
+    totalLoans: 0,
+    totalAmount: 0,
+    settledLoans: 0,
+    pendingLoans: 0,
+    overdueLoans: 0,
+    totalPenalties: 0,
+  };
+  const overdueLoans = currentUser?.id ? getOverdueLoans(currentUser.id) : [];
 
   const generateFullReport = () => {
     const reportData = {
       geradoEm: new Date().toLocaleString('pt-BR'),
+      usuario: currentUser?.fullName || 'Usuário',
       resumo: {
         totalEmprestimos: report.totalLoans,
         valorTotal: report.totalAmount,
@@ -25,7 +37,7 @@ export function UserReports() {
         emprestimosAtrasados: report.overdueLoans,
         multasAcumuladas: report.totalPenalties,
       },
-      emprestimos: loans.map(loan => ({
+      emprestimos: userLoans.map(loan => ({
         id: loan.id,
         cliente: loan.fullName,
         cpf: loan.cpf,
@@ -41,6 +53,7 @@ export function UserReports() {
     };
 
     console.log('=== RELATÓRIO COMPLETO ===');
+    console.log('Usuário:', reportData.usuario);
     console.log('Gerado em:', reportData.geradoEm);
     console.log('\n--- RESUMO ---');
     console.log('Total de Empréstimos:', reportData.resumo.totalEmprestimos);
@@ -66,7 +79,7 @@ export function UserReports() {
 
   const exportOverdueReport = () => {
     if (overdueLoans.length === 0) {
-      toast.info('Não há empréstimos em atraso');
+      toast.info('Você não possui empréstimos em atraso');
       return;
     }
 
@@ -83,6 +96,7 @@ export function UserReports() {
     }));
 
     console.log('=== RELATÓRIO DE INADIMPLÊNCIA ===');
+    console.log('Usuário:', currentUser?.fullName || 'Usuário');
     console.log('Gerado em:', new Date().toLocaleString('pt-BR'));
     console.log(`Total de empréstimos em atraso: ${overdueLoans.length}`);
     console.log('');
@@ -169,7 +183,7 @@ export function UserReports() {
             Relatório Geral
           </CardTitle>
           <CardDescription>
-            Relatório completo com todos os empréstimos
+            Relatório completo com seus empréstimos
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -208,7 +222,7 @@ export function UserReports() {
             Relatório de Inadimplência
           </CardTitle>
           <CardDescription>
-            Empréstimos em atraso e multas
+            Seus empréstimos em atraso e multas
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -226,7 +240,7 @@ export function UserReports() {
             
             {overdueLoans.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium">Principais Devedores:</p>
+                <p className="text-sm font-medium">Empréstimos em Atraso:</p>
                 {overdueLoans.slice(0, 3).map((loan) => (
                   <div key={loan.id} className="flex justify-between items-center p-2 bg-red-50 rounded">
                     <span className="text-sm">{loan.fullName}</span>
@@ -255,7 +269,7 @@ export function UserReports() {
       {overdueLoans.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-red-600 text-base">Empréstimos em Atraso</CardTitle>
+            <CardTitle className="text-red-600 text-base">Seus Empréstimos em Atraso</CardTitle>
             <CardDescription>
               Lista detalhada dos empréstimos atrasados
             </CardDescription>

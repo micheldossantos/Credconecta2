@@ -41,7 +41,7 @@ export function LoginPage() {
         setLoading(false);
       }
     } else {
-      toast.error('Senha administrativa incorreta. Use: 8470');
+      toast.error('Senha administrativa incorreta');
     }
   };
 
@@ -121,7 +121,7 @@ export function LoginPage() {
             <DialogHeader>
               <DialogTitle>Login Administrativo</DialogTitle>
               <DialogDescription>
-                Digite a senha administrativa: 8470
+                Digite a senha administrativa
               </DialogDescription>
             </DialogHeader>
             
@@ -130,17 +130,14 @@ export function LoginPage() {
                 <Label htmlFor="adminPassword">Senha Administrativa</Label>
                 <Input
                   id="adminPassword"
-                  type="text"
-                  placeholder="8470"
+                  type="password"
+                  placeholder="Digite a senha"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
                   autoComplete="off"
                   className="h-12 text-base"
                   required
                 />
-                <p className="text-xs text-blue-600 mt-1 font-medium">
-                  Senha: 8470
-                </p>
               </div>
               
               <div className="flex gap-2">

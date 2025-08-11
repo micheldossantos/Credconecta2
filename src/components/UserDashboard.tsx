@@ -27,12 +27,19 @@ type ActiveTab = 'overview' | 'add-loan' | 'manage-loans' | 'reports';
 export function UserDashboard() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const { logout, currentUser } = useAuth();
-  const { loans, getOverdueLoans, getLoanReport } = useLoans();
+  const { getOverdueLoans, getLoanReport, getUserLoans } = useLoans();
 
-  // Filtrar empréstimos do usuário atual (se necessário)
-  const userLoans = loans; // Por enquanto todos os empréstimos
-  const overdueLoans = getOverdueLoans();
-  const report = getLoanReport();
+  // Filtrar empréstimos do usuário atual
+  const userLoans = currentUser?.id ? getUserLoans(currentUser.id) : [];
+  const overdueLoans = currentUser?.id ? getOverdueLoans(currentUser.id) : [];
+  const report = currentUser?.id ? getLoanReport(currentUser.id) : {
+    totalLoans: 0,
+    totalAmount: 0,
+    settledLoans: 0,
+    pendingLoans: 0,
+    overdueLoans: 0,
+    totalPenalties: 0,
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -65,7 +72,7 @@ export function UserDashboard() {
                     </div>
                   </div>
                   <div className="mt-1 text-xs text-gray-500">
-                    Total cadastrado
+                    Seus empréstimos
                   </div>
                 </CardContent>
               </Card>
@@ -177,6 +184,23 @@ export function UserDashboard() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Mensagem se não houver empréstimos */}
+            {userLoans.length === 0 && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-gray-500">
+                    <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium mb-2">Nenhum empréstimo cadastrado</p>
+                    <p className="text-sm mb-4">Comece cadastrando seu primeiro empréstimo</p>
+                    <Button onClick={() => setActiveTab('add-loan')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Cadastrar Empréstimo
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
     }

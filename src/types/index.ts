@@ -24,6 +24,7 @@ export interface Loan {
   isSettled: boolean;
   createdAt: Date;
   updatedAt: Date;
+  createdBy: string; // ID do usuário que criou o empréstimo
 }
 
 export interface AuthUser {
