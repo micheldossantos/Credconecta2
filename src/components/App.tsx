@@ -3,6 +3,7 @@
 import React from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { LoanProvider } from '@/contexts/LoanContext';
+import { ContractProvider } from '@/contexts/ContractContext';
 import { LoginPage } from '@/components/LoginPage';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { UserDashboard } from '@/components/UserDashboard';
@@ -31,8 +32,10 @@ export default function App() {
   return (
     <AuthProvider>
       <LoanProvider>
-        <AppContent />
-        <Toaster />
+        <ContractProvider>
+          <AppContent />
+          <Toaster />
+        </ContractProvider>
       </LoanProvider>
     </AuthProvider>
   );

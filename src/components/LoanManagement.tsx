@@ -9,11 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLoans } from '@/contexts/LoanContext';
+import { useContracts } from '@/contexts/ContractContext';
+import { ContractGenerator } from './ContractGenerator';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Plus, CheckCircle, Edit, FileText, Camera, Upload } from 'lucide-react';
+import { Plus, CheckCircle, Edit, FileText, Camera, Upload, FileSignature } from 'lucide-react';
 import { Loan } from '@/types';
 
 const loanSchema = z.object({
@@ -33,6 +35,7 @@ export function LoanManagement() {
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const { loans, addLoan, updateLoan, settleLoan, calculatePenalty } = useLoans();
+  const { getContractByLoanId } = useContracts();
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<LoanFormData>({
     resolver: zodResolver(loanSchema),
@@ -313,7 +316,7 @@ export function LoanManagement() {
                     <TableHead>Valor</TableHead>
                     <TableHead>Parcelas</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Multa</TableHead>
+                    <TableHead>Contrato</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -321,6 +324,7 @@ export function LoanManagement() {
                   {loans.map((loan) => {
                     const penalty = calculatePenalty(loan);
                     const isOverdue = !loan.isSettled && loan.remainingInstallments > 0 && new Date() > loan.loanDate;
+                    const contract = getContractByLoanId(loan.id);
                     
                     return (
                       <TableRow key={loan.id}>
@@ -340,12 +344,12 @@ export function LoanManagement() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {penalty > 0 ? (
-                            <span className="text-red-600 font-medium">
-                              R$ {penalty.toFixed(2)}
-                            </span>
+                          {contract ? (
+                            <Badge variant={contract.status === 'signed' ? 'default' : 'secondary'}>
+                              {contract.status === 'signed' ? 'Assinado' : 'Pendente'}
+                            </Badge>
                           ) : (
-                            <span className="text-gray-500">-</span>
+                            <Badge variant="outline">Sem contrato</Badge>
                           )}
                         </TableCell>
                         <TableCell>
@@ -376,6 +380,34 @@ export function LoanManagement() {
                             >
                               <FileText className="h-4 w-4" />
                             </Button>
+                            
+                            {/* Botão de Contrato */}
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title="Gerenciar contrato"
+                                >
+                                  <FileSignature className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="w-[95vw] max-w-md">
+                                <DialogHeader>
+                                  <DialogTitle>Contrato Digital</DialogTitle>
+                                  <DialogDescription>
+                                    Gere e gerencie o contrato para este empréstimo
+                                  </DialogDescription>
+                                </DialogHeader>
+                                
+                                <ContractGenerator 
+                                  loan={loan}
+                                  onContractGenerated={(contract) => {
+                                    toast.success('Contrato gerado com sucesso!');
+                                  }}
+                                />
+                              </DialogContent>
+                            </Dialog>
                           </div>
                         </TableCell>
                       </TableRow>

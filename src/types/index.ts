@@ -25,6 +25,7 @@ export interface Loan {
   createdAt: Date;
   updatedAt: Date;
   createdBy: string; // ID do usuário que criou o empréstimo
+  contractId?: string; // ID do contrato associado
 }
 
 export interface AuthUser {
@@ -40,4 +41,37 @@ export interface LoanReport {
   pendingLoans: number;
   overdueLoans: number;
   totalPenalties: number;
+}
+
+export interface Contract {
+  id: string;
+  loanId: string;
+  templateId: string;
+  clientName: string;
+  clientCpf: string;
+  clientPhone: string;
+  loanAmount: number;
+  totalInstallments: number;
+  dailyPenalty: number;
+  loanDate: Date;
+  contractDate: Date;
+  clientSignature?: string;
+  lenderSignature?: string;
+  witnessSignature?: string;
+  status: 'draft' | 'signed' | 'completed';
+  pdfUrl?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ContractTemplate {
+  id: string;
+  name: string;
+  description: string;
+  content: string;
+  variables: string[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }

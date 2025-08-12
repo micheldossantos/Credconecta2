@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLoans } from '@/contexts/LoanContext';
+import { useContracts } from '@/contexts/ContractContext';
 import { UserManagement } from './UserManagement';
 import { LoanManagement } from './LoanManagement';
 import { ReportsPage } from './ReportsPage';
+import { ContractManagement } from './ContractManagement';
 import { StockTicker } from './StockTicker';
 import { 
   Users, 
@@ -19,20 +21,23 @@ import {
   DollarSign,
   TrendingUp,
   Clock,
-  Home
+  Home,
+  FileSignature
 } from 'lucide-react';
 import { CredconectaLogo } from './CredconectaLogo';
 
-type ActiveTab = 'overview' | 'users' | 'loans' | 'reports';
+type ActiveTab = 'overview' | 'users' | 'loans' | 'contracts' | 'reports';
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const { logout, users } = useAuth();
   const { loans, getOverdueLoans, getLoanReport } = useLoans();
+  const { contracts } = useContracts();
 
   const overdueLoans = getOverdueLoans();
   const report = getLoanReport();
   const blockedUsers = users.filter(user => user.isBlocked).length;
+  const pendingContracts = contracts.filter(contract => contract.status === 'draft').length;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -40,6 +45,8 @@ export function AdminDashboard() {
         return <UserManagement />;
       case 'loans':
         return <LoanManagement />;
+      case 'contracts':
+        return <ContractManagement />;
       case 'reports':
         return <ReportsPage />;
       default:
@@ -84,14 +91,19 @@ export function AdminDashboard() {
               <Card className="p-3">
                 <CardContent className="p-0">
                   <div className="flex items-center justify-between">
-                    <DollarSign className="h-5 w-5 text-purple-600" />
+                    <FileSignature className="h-5 w-5 text-purple-600" />
                     <div className="text-right">
-                      <div className="text-sm font-bold">
-                        R$ {(report.totalAmount / 1000).toFixed(0)}k
-                      </div>
-                      <div className="text-xs text-gray-600">Total</div>
+                      <div className="text-lg font-bold">{contracts.length}</div>
+                      <div className="text-xs text-gray-600">Contratos</div>
                     </div>
                   </div>
+                  {pendingContracts > 0 && (
+                    <div className="mt-1">
+                      <Badge variant="secondary" className="text-xs">
+                        {pendingContracts} pendentes
+                      </Badge>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -183,7 +195,7 @@ export function AdminDashboard() {
 
       {/* Navegação Inferior - Mobile */}
       <nav className="bg-white border-t fixed bottom-0 left-0 right-0 z-20">
-        <div className="grid grid-cols-4 h-16">
+        <div className="grid grid-cols-5 h-16">
           <button
             onClick={() => setActiveTab('overview')}
             className={`flex flex-col items-center justify-center space-y-1 ${
@@ -220,6 +232,21 @@ export function AdminDashboard() {
             {overdueLoans.length > 0 && (
               <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                 {overdueLoans.length}
+              </div>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('contracts')}
+            className={`flex flex-col items-center justify-center space-y-1 relative ${
+              activeTab === 'contracts' ? 'text-blue-600 bg-blue-50' : 'text-gray-600'
+            }`}
+          >
+            <FileSignature className="h-5 w-5" />
+            <span className="text-xs">Contratos</span>
+            {pendingContracts > 0 && (
+              <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                {pendingContracts}
               </div>
             )}
           </button>
