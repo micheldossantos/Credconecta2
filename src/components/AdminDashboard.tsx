@@ -11,6 +11,8 @@ import { UserManagement } from './UserManagement';
 import { LoanManagement } from './LoanManagement';
 import { ReportsPage } from './ReportsPage';
 import { ContractManagement } from './ContractManagement';
+import { NotificationSettings } from './NotificationSettings';
+import { NotificationCenter } from './NotificationCenter';
 import { StockTicker } from './StockTicker';
 import { 
   Users, 
@@ -22,11 +24,12 @@ import {
   TrendingUp,
   Clock,
   Home,
-  FileSignature
+  FileSignature,
+  Settings
 } from 'lucide-react';
 import { CredconectaLogo } from './CredconectaLogo';
 
-type ActiveTab = 'overview' | 'users' | 'loans' | 'contracts' | 'reports';
+type ActiveTab = 'overview' | 'users' | 'loans' | 'contracts' | 'reports' | 'notifications';
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
@@ -49,6 +52,8 @@ export function AdminDashboard() {
         return <ContractManagement />;
       case 'reports':
         return <ReportsPage />;
+      case 'notifications':
+        return <NotificationSettings />;
       default:
         return (
           <div className="space-y-4 pb-20">
@@ -181,9 +186,12 @@ export function AdminDashboard() {
                 <p className="text-xs text-gray-600">Admin</p>
               </div>
             </div>
-            <Button onClick={logout} variant="outline" size="sm">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <NotificationCenter />
+              <Button onClick={logout} variant="outline" size="sm">
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -195,14 +203,14 @@ export function AdminDashboard() {
 
       {/* Navegação Inferior - Mobile */}
       <nav className="bg-white border-t fixed bottom-0 left-0 right-0 z-20">
-        <div className="grid grid-cols-5 h-16">
+        <div className="grid grid-cols-6 h-16">
           <button
             onClick={() => setActiveTab('overview')}
             className={`flex flex-col items-center justify-center space-y-1 ${
               activeTab === 'overview' ? 'text-blue-600 bg-blue-50' : 'text-gray-600'
             }`}
           >
-            <Home className="h-5 w-5" />
+            <Home className="h-4 w-4" />
             <span className="text-xs">Início</span>
           </button>
           
@@ -212,7 +220,7 @@ export function AdminDashboard() {
               activeTab === 'users' ? 'text-blue-600 bg-blue-50' : 'text-gray-600'
             }`}
           >
-            <Users className="h-5 w-5" />
+            <Users className="h-4 w-4" />
             <span className="text-xs">Usuários</span>
             {blockedUsers > 0 && (
               <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
@@ -227,7 +235,7 @@ export function AdminDashboard() {
               activeTab === 'loans' ? 'text-blue-600 bg-blue-50' : 'text-gray-600'
             }`}
           >
-            <CreditCard className="h-5 w-5" />
+            <CreditCard className="h-4 w-4" />
             <span className="text-xs">Empréstimos</span>
             {overdueLoans.length > 0 && (
               <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
@@ -242,7 +250,7 @@ export function AdminDashboard() {
               activeTab === 'contracts' ? 'text-blue-600 bg-blue-50' : 'text-gray-600'
             }`}
           >
-            <FileSignature className="h-5 w-5" />
+            <FileSignature className="h-4 w-4" />
             <span className="text-xs">Contratos</span>
             {pendingContracts > 0 && (
               <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
@@ -257,8 +265,18 @@ export function AdminDashboard() {
               activeTab === 'reports' ? 'text-blue-600 bg-blue-50' : 'text-gray-600'
             }`}
           >
-            <FileText className="h-5 w-5" />
+            <FileText className="h-4 w-4" />
             <span className="text-xs">Relatórios</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`flex flex-col items-center justify-center space-y-1 ${
+              activeTab === 'notifications' ? 'text-blue-600 bg-blue-50' : 'text-gray-600'
+            }`}
+          >
+            <Settings className="h-4 w-4" />
+            <span className="text-xs">Config</span>
           </button>
         </div>
       </nav>

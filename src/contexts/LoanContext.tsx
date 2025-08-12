@@ -76,6 +76,11 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
       createdBy: userId,
     };
     setLoans(prev => [...prev, newLoan]);
+
+    // Disparar evento customizado para notificação
+    window.dispatchEvent(new CustomEvent('loanAdded', { 
+      detail: { loan: newLoan, userId } 
+    }));
   };
 
   const updateLoan = (id: string, updates: Partial<Loan>) => {
@@ -103,6 +108,11 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
         paidInstallments: loan.totalInstallments,
         remainingInstallments: 0 
       });
+
+      // Disparar evento customizado para notificação
+      window.dispatchEvent(new CustomEvent('loanSettled', { 
+        detail: { loan, userId: loan.createdBy } 
+      }));
     }
   };
 

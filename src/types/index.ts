@@ -75,3 +75,37 @@ export interface ContractTemplate {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface Notification {
+  id: string;
+  type: 'payment_reminder' | 'overdue_alert' | 'new_loan' | 'settlement_confirmation' | 'contract_signed' | 'system_alert';
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  isRead: boolean;
+  userId?: string; // Para notificações específicas de usuário
+  loanId?: string; // Relacionado a um empréstimo específico
+  contractId?: string; // Relacionado a um contrato específico
+  scheduledFor?: Date; // Para notificações agendadas
+  createdAt: Date;
+  readAt?: Date;
+  actionUrl?: string; // URL para ação relacionada
+  metadata?: Record<string, any>; // Dados extras
+}
+
+export interface NotificationSettings {
+  userId: string;
+  paymentReminders: boolean;
+  overdueAlerts: boolean;
+  newLoanNotifications: boolean;
+  settlementConfirmations: boolean;
+  contractNotifications: boolean;
+  systemAlerts: boolean;
+  reminderDaysBefore: number; // Dias antes do vencimento para lembrete
+  quietHoursStart: string; // Hora de início do período silencioso (ex: "22:00")
+  quietHoursEnd: string; // Hora de fim do período silencioso (ex: "08:00")
+  soundEnabled: boolean;
+  vibrationEnabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

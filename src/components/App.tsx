@@ -4,6 +4,7 @@ import React from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { LoanProvider } from '@/contexts/LoanContext';
 import { ContractProvider } from '@/contexts/ContractContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { LoginPage } from '@/components/LoginPage';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { UserDashboard } from '@/components/UserDashboard';
@@ -33,8 +34,10 @@ export default function App() {
     <AuthProvider>
       <LoanProvider>
         <ContractProvider>
-          <AppContent />
-          <Toaster />
+          <NotificationProvider>
+            <AppContent />
+            <Toaster />
+          </NotificationProvider>
         </ContractProvider>
       </LoanProvider>
     </AuthProvider>
