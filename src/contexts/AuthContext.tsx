@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthUser, User } from '@/types';
-import { supabase, DatabaseUser, isSupabaseConfigured } from '@/lib/supabase';
 
 interface AuthContextType {
   currentUser: AuthUser | null;
@@ -22,111 +21,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Verificar se estamos no cliente
+  // Verificar se o componente foi montado no cliente
   useEffect(() => {
-    setIsClient(true);
+    setMounted(true);
   }, []);
 
-  // Carregar usuários do Supabase ou localStorage
-  const loadUsers = async () => {
-    if (!isClient) return;
-    
-    try {
-      if (isSupabaseConfigured()) {
-        // Tentar carregar do Supabase
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.warn('Erro ao carregar usuários do Supabase, usando localStorage:', error);
-          loadUsersFromLocalStorage();
-          return;
-        }
-
-        const formattedUsers: User[] = data.map((user: DatabaseUser) => ({
-          id: user.id,
-          fullName: user.full_name,
-          cpf: user.cpf,
-          password: user.password,
-          isBlocked: user.is_blocked,
-          monthlyPaymentStatus: user.monthly_payment_status as 'paid' | 'pending' | 'overdue',
-          createdAt: new Date(user.created_at),
-          lastPayment: user.last_payment ? new Date(user.last_payment) : undefined,
-        }));
-
-        setUsers(formattedUsers);
-      } else {
-        // Usar localStorage se Supabase não estiver configurado
-        loadUsersFromLocalStorage();
-      }
-    } catch (error) {
-      console.warn('Erro ao carregar usuários, usando localStorage:', error);
-      loadUsersFromLocalStorage();
-    }
-  };
-
-  const loadUsersFromLocalStorage = () => {
-    if (!isClient || typeof window === 'undefined') return;
-    
-    try {
-      const savedUsers = localStorage.getItem('credconecta-users');
-      if (savedUsers) {
-        const parsedUsers = JSON.parse(savedUsers).map((user: any) => ({
-          ...user,
-          createdAt: new Date(user.createdAt),
-        }));
-        setUsers(parsedUsers);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar do localStorage:', error);
-    }
-  };
-
-  // Salvar usuários no localStorage
+  // Carregar dados do localStorage
   useEffect(() => {
-    if (isClient && users.length > 0) {
-      try {
-        localStorage.setItem('credconecta-users', JSON.stringify(users));
-      } catch (error) {
-        console.error('Erro ao salvar no localStorage:', error);
-      }
-    }
-  }, [users, isClient]);
+    if (!mounted) return;
 
-  // Carregar dados iniciais
-  useEffect(() => {
-    if (!isClient) return;
-
-    const initializeAuth = async () => {
-      setLoading(true);
-      
+    const loadData = () => {
       try {
-        // Verificar se há sessão salva
+        // Carregar sessão
         const savedAuth = localStorage.getItem('credconecta-auth');
         if (savedAuth) {
           setCurrentUser(JSON.parse(savedAuth));
         }
-      } catch (error) {
-        console.error('Erro ao carregar sessão:', error);
-      }
 
-      // Carregar usuários
-      await loadUsers();
-      setLoading(false);
+        // Carregar usuários
+        const savedUsers = localStorage.getItem('credconecta-users');
+        if (savedUsers) {
+          const parsedUsers = JSON.parse(savedUsers).map((user: any) => ({
+            ...user,
+            createdAt: new Date(user.createdAt),
+            lastPayment: user.lastPayment ? new Date(user.lastPayment) : undefined,
+          }));
+          setUsers(parsedUsers);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    initializeAuth();
-  }, [isClient]);
+    loadData();
+  }, [mounted]);
+
+  // Salvar usuários no localStorage
+  useEffect(() => {
+    if (mounted && users.length > 0) {
+      try {
+        localStorage.setItem('credconecta-users', JSON.stringify(users));
+      } catch (error) {
+        console.error('Erro ao salvar usuários:', error);
+      }
+    }
+  }, [users, mounted]);
 
   const login = async (type: 'admin' | 'user', credentials?: { cpf?: string; password: string }): Promise<boolean> => {
-    if (!isClient) return false;
+    if (!mounted) return false;
 
     if (type === 'admin') {
-      // Login do administrador
       if (credentials?.password === '8470') {
         const adminAuth: AuthUser = { type: 'admin', fullName: 'Administrador' };
         setCurrentUser(adminAuth);
@@ -139,50 +87,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return false;
     } else if (credentials && credentials.cpf) {
-      // Login do usuário
-      if (isSupabaseConfigured()) {
+      const user = users.find(u => u.cpf === credentials.cpf && u.password === credentials.password);
+      if (user && !user.isBlocked) {
+        const userAuth: AuthUser = { type: 'user', id: user.id, fullName: user.fullName };
+        setCurrentUser(userAuth);
         try {
-          const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('cpf', credentials.cpf)
-            .eq('password', credentials.password)
-            .eq('is_blocked', false)
-            .single();
-
-          if (error || !data) {
-            return false;
-          }
-
-          const userAuth: AuthUser = { 
-            type: 'user', 
-            id: data.id, 
-            fullName: data.full_name 
-          };
-          setCurrentUser(userAuth);
-          try {
-            localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
-          } catch (error) {
-            console.error('Erro ao salvar sessão:', error);
-          }
-          return true;
+          localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
         } catch (error) {
-          console.error('Erro no login:', error);
-          return false;
+          console.error('Erro ao salvar sessão:', error);
         }
-      } else {
-        // Fallback para localStorage
-        const user = users.find(u => u.cpf === credentials.cpf && u.password === credentials.password);
-        if (user && !user.isBlocked) {
-          const userAuth: AuthUser = { type: 'user', id: user.id, fullName: user.fullName };
-          setCurrentUser(userAuth);
-          try {
-            localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
-          } catch (error) {
-            console.error('Erro ao salvar sessão:', error);
-          }
-          return true;
-        }
+        return true;
       }
     }
     return false;
@@ -190,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setCurrentUser(null);
-    if (isClient) {
+    if (mounted) {
       try {
         localStorage.removeItem('credconecta-auth');
       } catch (error) {
@@ -199,34 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addUser = async (userData: Omit<User, 'id' | 'createdAt'>) => {
-    if (isSupabaseConfigured()) {
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .insert({
-            full_name: userData.fullName,
-            cpf: userData.cpf,
-            password: userData.password,
-            is_blocked: userData.isBlocked,
-            monthly_payment_status: userData.monthlyPaymentStatus,
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Erro ao adicionar usuário:', error);
-          return;
-        }
-
-        await loadUsers();
-        return;
-      } catch (error) {
-        console.error('Erro ao adicionar usuário:', error);
-      }
-    }
-
-    // Fallback para localStorage
+  const addUser = (userData: Omit<User, 'id' | 'createdAt'>) => {
     const newUser: User = {
       ...userData,
       id: Date.now().toString(),
@@ -235,74 +122,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUsers(prev => [...prev, newUser]);
   };
 
-  const updateUser = async (id: string, updates: Partial<User>) => {
-    if (isSupabaseConfigured()) {
-      try {
-        const updateData: any = {};
-        
-        if (updates.fullName) updateData.full_name = updates.fullName;
-        if (updates.cpf) updateData.cpf = updates.cpf;
-        if (updates.password) updateData.password = updates.password;
-        if (updates.isBlocked !== undefined) updateData.is_blocked = updates.isBlocked;
-        if (updates.monthlyPaymentStatus) updateData.monthly_payment_status = updates.monthlyPaymentStatus;
-        if (updates.lastPayment) updateData.last_payment = updates.lastPayment.toISOString();
-
-        const { error } = await supabase
-          .from('users')
-          .update(updateData)
-          .eq('id', id);
-
-        if (error) {
-          console.error('Erro ao atualizar usuário:', error);
-          return;
-        }
-
-        await loadUsers();
-        return;
-      } catch (error) {
-        console.error('Erro ao atualizar usuário:', error);
-      }
-    }
-
-    // Fallback para localStorage
+  const updateUser = (id: string, updates: Partial<User>) => {
     setUsers(prev => prev.map(user => 
       user.id === id ? { ...user, ...updates } : user
     ));
   };
 
-  const deleteUser = async (id: string) => {
-    if (isSupabaseConfigured()) {
-      try {
-        const { error } = await supabase
-          .from('users')
-          .delete()
-          .eq('id', id);
-
-        if (error) {
-          console.error('Erro ao deletar usuário:', error);
-          return;
-        }
-
-        await loadUsers();
-        return;
-      } catch (error) {
-        console.error('Erro ao deletar usuário:', error);
-      }
-    }
-
-    // Fallback para localStorage
+  const deleteUser = (id: string) => {
     setUsers(prev => prev.filter(user => user.id !== id));
   };
 
-  const toggleUserBlock = async (id: string) => {
+  const toggleUserBlock = (id: string) => {
     const user = users.find(u => u.id === id);
     if (user) {
-      await updateUser(id, { isBlocked: !user.isBlocked });
+      updateUser(id, { isBlocked: !user.isBlocked });
     }
   };
 
-  // Não renderizar até estar no cliente
-  if (!isClient) {
+  // Não renderizar até estar montado
+  if (!mounted) {
     return (
       <AuthContext.Provider value={{
         currentUser: null,
@@ -310,9 +148,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login: async () => false,
         logout: () => {},
         addUser: () => {},
-        updateUser: async () => {},
-        deleteUser: async () => {},
-        toggleUserBlock: async () => {},
+        updateUser: () => {},
+        deleteUser: () => {},
+        toggleUserBlock: () => {},
         loading: true,
       }}>
         {children}
