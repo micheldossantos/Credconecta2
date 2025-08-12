@@ -1,20 +1,12 @@
 {
-  "name": "next-template",
+  "name": "credconecta",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.11.0",
-  "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=10.0.0"
-  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --fix",
-    "type-check": "tsc --noEmit",
-    "pre-deploy": "pnpm run lint && pnpm run type-check",
-    "postinstall": "pnpm run type-check"
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
