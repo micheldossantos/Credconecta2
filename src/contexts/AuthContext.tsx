@@ -22,9 +22,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  // Verificar se estamos no cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Carregar usuários do Supabase ou localStorage
   const loadUsers = async () => {
+    if (!isClient) return;
+    
     try {
       if (isSupabaseConfigured()) {
         // Tentar carregar do Supabase
@@ -62,31 +70,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loadUsersFromLocalStorage = () => {
-    const savedUsers = localStorage.getItem('credconecta-users');
-    if (savedUsers) {
-      setUsers(JSON.parse(savedUsers).map((user: any) => ({
-        ...user,
-        createdAt: new Date(user.createdAt),
-      })));
+    if (!isClient || typeof window === 'undefined') return;
+    
+    try {
+      const savedUsers = localStorage.getItem('credconecta-users');
+      if (savedUsers) {
+        const parsedUsers = JSON.parse(savedUsers).map((user: any) => ({
+          ...user,
+          createdAt: new Date(user.createdAt),
+        }));
+        setUsers(parsedUsers);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar do localStorage:', error);
     }
   };
 
   // Salvar usuários no localStorage
   useEffect(() => {
-    if (users.length > 0) {
-      localStorage.setItem('credconecta-users', JSON.stringify(users));
+    if (isClient && users.length > 0) {
+      try {
+        localStorage.setItem('credconecta-users', JSON.stringify(users));
+      } catch (error) {
+        console.error('Erro ao salvar no localStorage:', error);
+      }
     }
-  }, [users]);
+  }, [users, isClient]);
 
   // Carregar dados iniciais
   useEffect(() => {
+    if (!isClient) return;
+
     const initializeAuth = async () => {
       setLoading(true);
       
-      // Verificar se há sessão salva
-      const savedAuth = localStorage.getItem('credconecta-auth');
-      if (savedAuth) {
-        setCurrentUser(JSON.parse(savedAuth));
+      try {
+        // Verificar se há sessão salva
+        const savedAuth = localStorage.getItem('credconecta-auth');
+        if (savedAuth) {
+          setCurrentUser(JSON.parse(savedAuth));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar sessão:', error);
       }
 
       // Carregar usuários
@@ -95,15 +120,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeAuth();
-  }, []);
+  }, [isClient]);
 
   const login = async (type: 'admin' | 'user', credentials?: { cpf?: string; password: string }): Promise<boolean> => {
+    if (!isClient) return false;
+
     if (type === 'admin') {
       // Login do administrador
       if (credentials?.password === '8470') {
         const adminAuth: AuthUser = { type: 'admin', fullName: 'Administrador' };
         setCurrentUser(adminAuth);
-        localStorage.setItem('credconecta-auth', JSON.stringify(adminAuth));
+        try {
+          localStorage.setItem('credconecta-auth', JSON.stringify(adminAuth));
+        } catch (error) {
+          console.error('Erro ao salvar sessão:', error);
+        }
         return true;
       }
       return false;
@@ -129,7 +160,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             fullName: data.full_name 
           };
           setCurrentUser(userAuth);
-          localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
+          try {
+            localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
+          } catch (error) {
+            console.error('Erro ao salvar sessão:', error);
+          }
           return true;
         } catch (error) {
           console.error('Erro no login:', error);
@@ -141,7 +176,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (user && !user.isBlocked) {
           const userAuth: AuthUser = { type: 'user', id: user.id, fullName: user.fullName };
           setCurrentUser(userAuth);
-          localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
+          try {
+            localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
+          } catch (error) {
+            console.error('Erro ao salvar sessão:', error);
+          }
           return true;
         }
       }
@@ -151,7 +190,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('credconecta-auth');
+    if (isClient) {
+      try {
+        localStorage.removeItem('credconecta-auth');
+      } catch (error) {
+        console.error('Erro ao remover sessão:', error);
+      }
+    }
   };
 
   const addUser = async (userData: Omit<User, 'id' | 'createdAt'>) => {
@@ -255,6 +300,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await updateUser(id, { isBlocked: !user.isBlocked });
     }
   };
+
+  // Não renderizar até estar no cliente
+  if (!isClient) {
+    return (
+      <AuthContext.Provider value={{
+        currentUser: null,
+        users: [],
+        login: async () => false,
+        logout: () => {},
+        addUser: () => {},
+        updateUser: async () => {},
+        deleteUser: async () => {},
+        toggleUserBlock: async () => {},
+        loading: true,
+      }}>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{
