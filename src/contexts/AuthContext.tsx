@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthUser, User } from '@/types';
-import { supabase, DatabaseUser } from '@/lib/supabase';
+import { supabase, DatabaseUser, isSupabaseConfigured } from '@/lib/supabase';
 
 interface AuthContextType {
   currentUser: AuthUser | null;
@@ -23,35 +23,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Carregar usuários do Supabase
+  // Carregar usuários do Supabase ou localStorage
   const loadUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
+      if (isSupabaseConfigured()) {
+        // Tentar carregar do Supabase
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erro ao carregar usuários:', error);
-        return;
+        if (error) {
+          console.warn('Erro ao carregar usuários do Supabase, usando localStorage:', error);
+          loadUsersFromLocalStorage();
+          return;
+        }
+
+        const formattedUsers: User[] = data.map((user: DatabaseUser) => ({
+          id: user.id,
+          fullName: user.full_name,
+          cpf: user.cpf,
+          password: user.password,
+          isBlocked: user.is_blocked,
+          monthlyPaymentStatus: user.monthly_payment_status as 'paid' | 'pending' | 'overdue',
+          createdAt: new Date(user.created_at),
+          lastPayment: user.last_payment ? new Date(user.last_payment) : undefined,
+        }));
+
+        setUsers(formattedUsers);
+      } else {
+        // Usar localStorage se Supabase não estiver configurado
+        loadUsersFromLocalStorage();
       }
-
-      const formattedUsers: User[] = data.map((user: DatabaseUser) => ({
-        id: user.id,
-        fullName: user.full_name,
-        cpf: user.cpf,
-        password: user.password,
-        isBlocked: user.is_blocked,
-        monthlyPaymentStatus: user.monthly_payment_status as 'paid' | 'pending' | 'overdue',
-        createdAt: new Date(user.created_at),
-        lastPayment: user.last_payment ? new Date(user.last_payment) : undefined,
-      }));
-
-      setUsers(formattedUsers);
     } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
+      console.warn('Erro ao carregar usuários, usando localStorage:', error);
+      loadUsersFromLocalStorage();
     }
   };
+
+  const loadUsersFromLocalStorage = () => {
+    const savedUsers = localStorage.getItem('credconecta-users');
+    if (savedUsers) {
+      setUsers(JSON.parse(savedUsers).map((user: any) => ({
+        ...user,
+        createdAt: new Date(user.createdAt),
+      })));
+    }
+  };
+
+  // Salvar usuários no localStorage
+  useEffect(() => {
+    if (users.length > 0) {
+      localStorage.setItem('credconecta-users', JSON.stringify(users));
+    }
+  }, [users]);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -83,31 +108,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return false;
     } else if (credentials && credentials.cpf) {
-      // Login do usuário - verificar no banco
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('cpf', credentials.cpf)
-          .eq('password', credentials.password)
-          .eq('is_blocked', false)
-          .single();
+      // Login do usuário
+      if (isSupabaseConfigured()) {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('cpf', credentials.cpf)
+            .eq('password', credentials.password)
+            .eq('is_blocked', false)
+            .single();
 
-        if (error || !data) {
+          if (error || !data) {
+            return false;
+          }
+
+          const userAuth: AuthUser = { 
+            type: 'user', 
+            id: data.id, 
+            fullName: data.full_name 
+          };
+          setCurrentUser(userAuth);
+          localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
+          return true;
+        } catch (error) {
+          console.error('Erro no login:', error);
           return false;
         }
-
-        const userAuth: AuthUser = { 
-          type: 'user', 
-          id: data.id, 
-          fullName: data.full_name 
-        };
-        setCurrentUser(userAuth);
-        localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
-        return true;
-      } catch (error) {
-        console.error('Erro no login:', error);
-        return false;
+      } else {
+        // Fallback para localStorage
+        const user = users.find(u => u.cpf === credentials.cpf && u.password === credentials.password);
+        if (user && !user.isBlocked) {
+          const userAuth: AuthUser = { type: 'user', id: user.id, fullName: user.fullName };
+          setCurrentUser(userAuth);
+          localStorage.setItem('credconecta-auth', JSON.stringify(userAuth));
+          return true;
+        }
       }
     }
     return false;
@@ -119,76 +155,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addUser = async (userData: Omit<User, 'id' | 'createdAt'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .insert({
-          full_name: userData.fullName,
-          cpf: userData.cpf,
-          password: userData.password,
-          is_blocked: userData.isBlocked,
-          monthly_payment_status: userData.monthlyPaymentStatus,
-        })
-        .select()
-        .single();
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .insert({
+            full_name: userData.fullName,
+            cpf: userData.cpf,
+            password: userData.password,
+            is_blocked: userData.isBlocked,
+            monthly_payment_status: userData.monthlyPaymentStatus,
+          })
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Erro ao adicionar usuário:', error);
+        if (error) {
+          console.error('Erro ao adicionar usuário:', error);
+          return;
+        }
+
+        await loadUsers();
         return;
+      } catch (error) {
+        console.error('Erro ao adicionar usuário:', error);
       }
-
-      // Recarregar usuários
-      await loadUsers();
-    } catch (error) {
-      console.error('Erro ao adicionar usuário:', error);
     }
+
+    // Fallback para localStorage
+    const newUser: User = {
+      ...userData,
+      id: Date.now().toString(),
+      createdAt: new Date(),
+    };
+    setUsers(prev => [...prev, newUser]);
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
-    try {
-      const updateData: any = {};
-      
-      if (updates.fullName) updateData.full_name = updates.fullName;
-      if (updates.cpf) updateData.cpf = updates.cpf;
-      if (updates.password) updateData.password = updates.password;
-      if (updates.isBlocked !== undefined) updateData.is_blocked = updates.isBlocked;
-      if (updates.monthlyPaymentStatus) updateData.monthly_payment_status = updates.monthlyPaymentStatus;
-      if (updates.lastPayment) updateData.last_payment = updates.lastPayment.toISOString();
+    if (isSupabaseConfigured()) {
+      try {
+        const updateData: any = {};
+        
+        if (updates.fullName) updateData.full_name = updates.fullName;
+        if (updates.cpf) updateData.cpf = updates.cpf;
+        if (updates.password) updateData.password = updates.password;
+        if (updates.isBlocked !== undefined) updateData.is_blocked = updates.isBlocked;
+        if (updates.monthlyPaymentStatus) updateData.monthly_payment_status = updates.monthlyPaymentStatus;
+        if (updates.lastPayment) updateData.last_payment = updates.lastPayment.toISOString();
 
-      const { error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('id', id);
+        const { error } = await supabase
+          .from('users')
+          .update(updateData)
+          .eq('id', id);
 
-      if (error) {
-        console.error('Erro ao atualizar usuário:', error);
+        if (error) {
+          console.error('Erro ao atualizar usuário:', error);
+          return;
+        }
+
+        await loadUsers();
         return;
+      } catch (error) {
+        console.error('Erro ao atualizar usuário:', error);
       }
-
-      // Recarregar usuários
-      await loadUsers();
-    } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
     }
+
+    // Fallback para localStorage
+    setUsers(prev => prev.map(user => 
+      user.id === id ? { ...user, ...updates } : user
+    ));
   };
 
   const deleteUser = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', id);
+    if (isSupabaseConfigured()) {
+      try {
+        const { error } = await supabase
+          .from('users')
+          .delete()
+          .eq('id', id);
 
-      if (error) {
-        console.error('Erro ao deletar usuário:', error);
+        if (error) {
+          console.error('Erro ao deletar usuário:', error);
+          return;
+        }
+
+        await loadUsers();
         return;
+      } catch (error) {
+        console.error('Erro ao deletar usuário:', error);
       }
-
-      // Recarregar usuários
-      await loadUsers();
-    } catch (error) {
-      console.error('Erro ao deletar usuário:', error);
     }
+
+    // Fallback para localStorage
+    setUsers(prev => prev.filter(user => user.id !== id));
   };
 
   const toggleUserBlock = async (id: string) => {
