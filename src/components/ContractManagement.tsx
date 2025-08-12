@@ -55,7 +55,7 @@ export function ContractManagement() {
     console.log('Status:', pdfData.status);
     console.log('Assinatura Cliente:', pdfData.signatures.client);
     console.log('Assinatura Credor:', pdfData.signatures.lender);
-    console.log('Gerado em:', pdfData.gener atedAt);
+    console.log('Gerado em:', pdfData.generatedAt);
     console.log('==================');
 
     toast.success('PDF do contrato gerado! Verifique o console');
