@@ -1,15 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Notification, NotificationSettings } from '@/types';
+import { AppNotification, NotificationSettings } from '@/types';
 import { useAuth } from './AuthContext';
-import { useLoans } from './LoanContext';
 
 interface NotificationContextType {
-  notifications: Notification[];
+  notifications: AppNotification[];
   settings: NotificationSettings | null;
   unreadCount: number;
-  addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => void;
+  addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'isRead'>) => void;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   deleteNotification: (notificationId: string) => void;
@@ -22,7 +21,7 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -38,7 +37,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     if (!mounted || !currentUser) return;
 
     const loadData = () => {
-      
       try {
         // Carregar notificações
         const savedNotifications = localStorage.getItem(`credconecta-notifications-${currentUser.id || 'admin'}`);
@@ -185,8 +183,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     };
   }, [mounted, settings, currentUser]);
 
-  const addNotification = (notificationData: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => {
-    const newNotification: Notification = {
+  const addNotification = (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'isRead'>) => {
+    const newNotification: AppNotification = {
       ...notificationData,
       id: Date.now().toString(),
       isRead: false,

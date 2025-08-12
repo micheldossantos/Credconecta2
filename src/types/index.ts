@@ -76,7 +76,7 @@ export interface ContractTemplate {
   updatedAt: Date;
 }
 
-export interface Notification {
+export interface AppNotification {
   id: string;
   type: 'payment_reminder' | 'overdue_alert' | 'new_loan' | 'settlement_confirmation' | 'contract_signed' | 'system_alert';
   title: string;
